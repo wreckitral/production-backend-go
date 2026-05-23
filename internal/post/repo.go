@@ -13,6 +13,13 @@ import (
 	"github.com/wreckitral/production-backend-go/internal/model"
 )
 
+type Repository interface {
+    Create(ctx context.Context, p model.Post) (model.Post, error)
+    GetByID(ctx context.Context, id uuid.UUID) (model.Post, error)
+    List(ctx context.Context, limit, offset int) ([]model.Post, error)
+    Update(ctx context.Context, p model.Post) (model.Post, error)
+    Delete(ctx context.Context, id uuid.UUID) error
+}
 
 type queryer interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
@@ -20,20 +27,20 @@ type queryer interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-type Repo struct {
+type repo struct {
 	pool *pgxpool.Pool
 	db queryer
 }
 
-func NewRepo(pool *pgxpool.Pool) *Repo {
-	return &Repo{
+func Newrepo(pool *pgxpool.Pool) Repository {
+	return &repo{
 		pool: pool,
 		db: pool,
 	}
 }
 
-func (r *Repo) withQueryer(q queryer) *Repo {
-	return &Repo{
+func (r *repo) withQueryer(q queryer) *repo {
+	return &repo{
 		pool: r.pool,
 		db: q,
 	}
@@ -52,7 +59,7 @@ func mapPGError(err error) error {
 	return err
 }
 
-func (r *Repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
+func (r *repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
 	const q = `
 		INSERT INTO posts (author_id, title, body)
 		VALUES ($1, $2, $3)
@@ -75,7 +82,7 @@ func (r *Repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
 	return out, nil
 }
 
-func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
+func (r *repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
 	const q = `
 		SELECT id, author_id, title, body, created_at, updated_at
 		FROM posts
@@ -99,7 +106,7 @@ func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
 	return out, nil
 }
 
-func (r *Repo) List(ctx context.Context, limit, offset int) ([]model.Post, error) {
+func (r *repo) List(ctx context.Context, limit, offset int) ([]model.Post, error) {
 	const q = `
 		SELECT id, author_id, title, body, created_at, updated_at
         FROM posts
@@ -130,7 +137,7 @@ func (r *Repo) List(ctx context.Context, limit, offset int) ([]model.Post, error
 	return posts, nil
 }
 
-func (r *Repo) Update(ctx context.Context, p model.Post) (model.Post, error) {
+func (r *repo) Update(ctx context.Context, p model.Post) (model.Post, error) {
 	const q = `
 		UPDATE posts
 		SET title = $1, body = $2, updated_at = NOW()
@@ -154,7 +161,7 @@ func (r *Repo) Update(ctx context.Context, p model.Post) (model.Post, error) {
     return out, nil
 }
 
-func (r *Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *repo) Delete(ctx context.Context, id uuid.UUID) error {
     const q = `DELETE FROM posts WHERE id = $1`
     tag, err := r.db.Exec(ctx, q, id)
     if err != nil {
