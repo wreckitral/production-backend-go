@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres_container
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blog_network
+
+volumes:
+  postgres_data:
+    name: postgres_persistent_data
+
+networks:
+  blog_network:
+    name: blog_network
+    driver: bridge

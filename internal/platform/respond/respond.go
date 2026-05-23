@@ -15,9 +15,9 @@ import (
 const MaxJSONBodyBytes = 1 << 20 // 1 Mib
 
 type ErrorResponse struct {
-	Error string `json:"error"`
-	Fields map[string]string `json:"fields,omitempty"`
-	RequestID string `json:"request_id,omitempty"`
+	Error     string            `json:"error"`
+	Fields    map[string]string `json:"fields,omitempty"`
+	RequestID string            `json:"request_id,omitempty"`
 }
 
 func JSON(w http.ResponseWriter, status int, v any) {
@@ -28,7 +28,7 @@ func JSON(w http.ResponseWriter, status int, v any) {
 
 func Error(w http.ResponseWriter, r *http.Request, status int, msg string) {
 	JSON(w, status, ErrorResponse{
-		Error: msg,
+		Error:     msg,
 		RequestID: r.Header.Get("X-Request-ID"),
 	})
 }
@@ -51,15 +51,15 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 
 		switch {
 		case errors.Is(err, io.EOF):
-            return fmt.Errorf("body must not be empty")
-        case errors.As(err, &syntaxErr):
-            return fmt.Errorf("malformed json at byte %d", syntaxErr.Offset)
-        case errors.As(err, &typeErr):
-            return fmt.Errorf("invalid value for field %q", typeErr.Field)
-        case strings.Contains(err.Error(), "request body too large"):
-            return fmt.Errorf("body must be smaller than %d bytes", MaxJSONBodyBytes)
-        default:
-            return fmt.Errorf("invalid json")
+			return fmt.Errorf("body must not be empty")
+		case errors.As(err, &syntaxErr):
+			return fmt.Errorf("malformed json at byte %d", syntaxErr.Offset)
+		case errors.As(err, &typeErr):
+			return fmt.Errorf("invalid value for field %q", typeErr.Field)
+		case strings.Contains(err.Error(), "request body too large"):
+			return fmt.Errorf("body must be smaller than %d bytes", MaxJSONBodyBytes)
+		default:
+			return fmt.Errorf("invalid json")
 
 		}
 	}
@@ -76,20 +76,20 @@ func AppError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.As(err, &validationErrs):
 		JSON(w, http.StatusBadRequest, ErrorResponse{
-			Error: "validation failed",
-			Fields: validationFields(validationErrs),
+			Error:     "validation failed",
+			Fields:    validationFields(validationErrs),
 			RequestID: r.Header.Get("X-Request-ID"),
 		})
 	case errors.Is(err, apperr.ErrNotFound):
-        Error(w, r, http.StatusNotFound, "not found")
-    case errors.Is(err, apperr.ErrForbidden):
-        Error(w, r, http.StatusForbidden, "forbidden")
-    case errors.Is(err, apperr.ErrUnauthorized):
-        Error(w, r, http.StatusUnauthorized, "unauthorized")
-    case errors.Is(err, apperr.ErrConflict):
-        Error(w, r, http.StatusConflict, "conflict")
-    default:
-        Error(w, r, http.StatusInternalServerError, "internal error")
+		Error(w, r, http.StatusNotFound, "not found")
+	case errors.Is(err, apperr.ErrForbidden):
+		Error(w, r, http.StatusForbidden, "forbidden")
+	case errors.Is(err, apperr.ErrUnauthorized):
+		Error(w, r, http.StatusUnauthorized, "unauthorized")
+	case errors.Is(err, apperr.ErrConflict):
+		Error(w, r, http.StatusConflict, "conflict")
+	default:
+		Error(w, r, http.StatusInternalServerError, "internal error")
 	}
 }
 
