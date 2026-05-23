@@ -7,42 +7,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/wreckitral/production-backend-go/internal/apperr"
 	"github.com/wreckitral/production-backend-go/internal/model"
 )
 
-type Repository interface {
-    Create(ctx context.Context, p model.Post) (model.Post, error)
-    GetByID(ctx context.Context, id uuid.UUID) (model.Post, error)
-    List(ctx context.Context, limit, offset int) ([]model.Post, error)
-    Update(ctx context.Context, p model.Post) (model.Post, error)
-    Delete(ctx context.Context, id uuid.UUID) error
-}
-
-type queryer interface {
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-}
-
-type repo struct {
+type Repo struct {
 	pool *pgxpool.Pool
-	db queryer
 }
 
-func Newrepo(pool *pgxpool.Pool) Repository {
-	return &repo{
+func NewRepo(pool *pgxpool.Pool) *Repo {
+	return &Repo{
 		pool: pool,
-		db: pool,
-	}
-}
-
-func (r *repo) withQueryer(q queryer) *repo {
-	return &repo{
-		pool: r.pool,
-		db: q,
 	}
 }
 
@@ -59,7 +36,7 @@ func mapPGError(err error) error {
 	return err
 }
 
-func (r *repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
+func (r *Repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
 	const q = `
 		INSERT INTO posts (author_id, title, body)
 		VALUES ($1, $2, $3)
@@ -67,7 +44,7 @@ func (r *repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
 	`
 
 	var out model.Post
-	err := r.db.QueryRow(ctx, q, p.AuthorID, p.Title, p.Body).Scan(
+	err := r.pool.QueryRow(ctx, q, p.AuthorID, p.Title, p.Body).Scan(
 		&out.ID,
 		&out.AuthorID,
 		&out.Title,
@@ -82,7 +59,7 @@ func (r *repo) Create(ctx context.Context, p model.Post) (model.Post, error) {
 	return out, nil
 }
 
-func (r *repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
+func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
 	const q = `
 		SELECT id, author_id, title, body, created_at, updated_at
 		FROM posts
@@ -90,7 +67,7 @@ func (r *repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
 	`
 
 	var out model.Post
-	err := r.db.QueryRow(ctx, q, id).Scan(
+	err := r.pool.QueryRow(ctx, q, id).Scan(
 		&out.ID,
 		&out.AuthorID,
 		&out.Title,
@@ -106,7 +83,7 @@ func (r *repo) GetByID(ctx context.Context, id uuid.UUID) (model.Post, error) {
 	return out, nil
 }
 
-func (r *repo) List(ctx context.Context, limit, offset int) ([]model.Post, error) {
+func (r *Repo) List(ctx context.Context, limit, offset int) ([]model.Post, error) {
 	const q = `
 		SELECT id, author_id, title, body, created_at, updated_at
         FROM posts
@@ -114,7 +91,7 @@ func (r *repo) List(ctx context.Context, limit, offset int) ([]model.Post, error
         LIMIT $1 OFFSET $2
 	`
 
-	rows, err := r.db.Query(ctx, q, limit, offset)
+	rows, err := r.pool.Query(ctx, q, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("list posts: %w", mapPGError(err))
 	}
@@ -125,8 +102,8 @@ func (r *repo) List(ctx context.Context, limit, offset int) ([]model.Post, error
 	for rows.Next() {
 		var p model.Post
 		if err := rows.Scan(&p.ID, &p.AuthorID, &p.Title, &p.Body, &p.CreatedAt, &p.UpdatedAt); err != nil {
-            return nil, fmt.Errorf("scan post: %w", err)
-        }
+			return nil, fmt.Errorf("scan post: %w", err)
+		}
 		posts = append(posts, p)
 	}
 
@@ -137,7 +114,7 @@ func (r *repo) List(ctx context.Context, limit, offset int) ([]model.Post, error
 	return posts, nil
 }
 
-func (r *repo) Update(ctx context.Context, p model.Post) (model.Post, error) {
+func (r *Repo) Update(ctx context.Context, p model.Post) (model.Post, error) {
 	const q = `
 		UPDATE posts
 		SET title = $1, body = $2, updated_at = NOW()
@@ -145,32 +122,32 @@ func (r *repo) Update(ctx context.Context, p model.Post) (model.Post, error) {
 		RETURNING id, author_id, title, body, created_at, updated_at
 	`
 
-    var out model.Post
-    err := r.db.QueryRow(ctx, q, p.Title, p.Body, p.ID).Scan(
-        &out.ID,
-        &out.AuthorID,
-        &out.Title,
-        &out.Body,
-        &out.CreatedAt,
-        &out.UpdatedAt,
-    )
-    if err != nil {
-        return model.Post{}, fmt.Errorf("update post: %w", mapPGError(err))
-    }
+	var out model.Post
+	err := r.pool.QueryRow(ctx, q, p.Title, p.Body, p.ID).Scan(
+		&out.ID,
+		&out.AuthorID,
+		&out.Title,
+		&out.Body,
+		&out.CreatedAt,
+		&out.UpdatedAt,
+	)
+	if err != nil {
+		return model.Post{}, fmt.Errorf("update post: %w", mapPGError(err))
+	}
 
-    return out, nil
+	return out, nil
 }
 
-func (r *repo) Delete(ctx context.Context, id uuid.UUID) error {
-    const q = `DELETE FROM posts WHERE id = $1`
-    tag, err := r.db.Exec(ctx, q, id)
-    if err != nil {
-        return fmt.Errorf("delete post: %w", mapPGError(err))
-    }
+func (r *Repo) Delete(ctx context.Context, id uuid.UUID) error {
+	const q = `DELETE FROM posts WHERE id = $1`
+	tag, err := r.pool.Exec(ctx, q, id)
+	if err != nil {
+		return fmt.Errorf("delete post: %w", mapPGError(err))
+	}
 
-    if tag.RowsAffected() == 0 {
-        return apperr.ErrNotFound
-    }
+	if tag.RowsAffected() == 0 {
+		return apperr.ErrNotFound
+	}
 
-    return nil
+	return nil
 }

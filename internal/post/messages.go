@@ -9,19 +9,19 @@ import (
 
 type CreatePostRequest struct {
 	Title string `json:"title"`
-	Body string `json:"body"`
+	Body  string `json:"body"`
 }
 
 type UpdatePostRequest struct {
 	Title *string `json:"title,omitempty"`
-	Body *string `json:"body,omitempty"`
+	Body  *string `json:"body,omitempty"`
 }
 
 type PostResponse struct {
-	ID uuid.UUID `json:"id"`
-	AuthorID uuid.UUID `json:"author_id"`
-	Title string `json:"title"`
-	Body string `json:"body"`
+	ID        uuid.UUID `json:"id"`
+	AuthorID  uuid.UUID `json:"author_id"`
+	Title     string    `json:"title"`
+	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
