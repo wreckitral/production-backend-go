@@ -1,5 +1,7 @@
 DATABASE_URL=postgres://admin:supersecretpassword@127.0.0.1:5432/blog?sslmode=disable
 
+.PHONY: migrate-new migrate-up migrate-down migrate-version
+
 migrate-new:
 	migrate create -ext sql -dir migrations -seq $(name)
 
@@ -8,3 +10,6 @@ migrate-up:
 
 migrate-down:
 	migrate -path migrations -database "$(DATABASE_URL)" down 1
+
+migrate-version:
+	migrate -path migrations -database "$(DATABASE_URL)" version
