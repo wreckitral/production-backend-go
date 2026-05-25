@@ -29,10 +29,10 @@ func NewService(repo *Repo, jwt config.JWT) *Service {
 }
 
 func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User, error) {
-	email := strings.ToLower(strings.TrimSpace(req.Email))
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
 	if err := validation.ValidateStruct(&req,
-		validation.Field(&email, validation.Required),
+		validation.Field(&req.Email, validation.Required),
 		validation.Field(&req.Password, validation.Required, validation.Length(8, 128)),
 	); err != nil {
 		return model.User{}, fmt.Errorf("validate: %w", err)
@@ -44,7 +44,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User
 	}
 
 	user := model.User{
-		Email:        email,
+		Email:        req.Email,
 		PasswordHash: string(hash),
 	}
 
@@ -57,16 +57,16 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User
 }
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) (LoginResponse, error) {
-	email := strings.ToLower(strings.TrimSpace(req.Email))
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
 	if err := validation.ValidateStruct(&req,
-		validation.Field(&email, validation.Required),
+		validation.Field(&req.Email, validation.Required),
 		validation.Field(&req.Password, validation.Required),
 	); err != nil {
 		return LoginResponse{}, fmt.Errorf("validate: %w", err)
 	}
 
-	user, err := s.repo.GetByEmail(ctx, email)
+	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, apperr.ErrNotFound) {
 			return LoginResponse{}, apperr.ErrUnauthorized
