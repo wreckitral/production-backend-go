@@ -1,20 +1,20 @@
 package post
 
 import (
-    "context"
-    "testing"
+	"context"
+	"testing"
 
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 func TestServiceCreate_ValidatesTitle(t *testing.T) {
-    svc := NewService(nil)
+	svc := NewService(nil)
 
-    _, err := svc.Create(context.Background(), uuid.New(), CreatePostRequest{
-        Title: "",
-        Body:  "body",
-    })
-    if err == nil {
-        t.Fatal("expected validation error")
-    }
+	_, err := svc.Create(context.Background(), uuid.New(), CreatePostRequest{
+		Title: "",
+		Body:  "body",
+	})
+	if err == nil {
+		t.Fatal("expected validation error")
+	}
 }

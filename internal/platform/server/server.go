@@ -58,6 +58,7 @@ func New(d Deps) *App {
 			web = sub
 		}
 		r.Handle("/*", http.FileServer(http.FS(web)))
+		r.Handle("/docs/*", http.FileServer(http.FS(web)))
 	}
 
 	return &App{
