@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -89,6 +90,7 @@ func AppError(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, apperr.ErrConflict):
 		Error(w, r, http.StatusConflict, "conflict")
 	default:
+		slog.Error("unhandled error", "error", err, "path", r.URL.Path)
 		Error(w, r, http.StatusInternalServerError, "internal error")
 	}
 }
