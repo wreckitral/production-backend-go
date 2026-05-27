@@ -97,7 +97,7 @@ async function renderList(el) {
                 ? '<div class="empty">No posts yet.</div>'
                 : posts.map(p => `
             <div class="post-row" onclick="nav('post','${p.id}')">
-              <div class="post-row-meta">${date(p.created_at)}</div>
+              <div class="post-row-meta">${date(p.created_at)} · ${esc(p.author_email.split('@')[0])}</div>
               <div class="post-row-title">${esc(p.title)}</div>
               <div class="post-row-excerpt">${esc(p.body)}</div>
             </div>`).join('')}
@@ -123,7 +123,7 @@ async function renderPost(el) {
         el.innerHTML = `
       <div class="fade">
         <button class="back-btn" onclick="nav('list')">← All posts</button>
-        <div class="post-meta"><span>${date(p.created_at)}</span></div>
+        <div class="post-meta"><span>${date(p.created_at)} · ${esc(p.author_email.split('@')[0])}</span></div>
         <h1 class="post-title">${esc(p.title)}</h1>
         <div class="post-body">${esc(p.body)}</div>
         ${S.token && S.uid === p.author_id ? `

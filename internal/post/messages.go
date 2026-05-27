@@ -18,21 +18,23 @@ type UpdatePostRequest struct {
 }
 
 type PostResponse struct {
-	ID        uuid.UUID `json:"id"`
-	AuthorID  uuid.UUID `json:"author_id"`
-	Title     string    `json:"title"`
-	Body      string    `json:"body"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          uuid.UUID `json:"id"`
+	AuthorID    uuid.UUID `json:"author_id"`
+	AuthorEmail string    `json:"author_email"`
+	Title       string    `json:"title"`
+	Body        string    `json:"body"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func toResponse(p model.Post) PostResponse {
 	return PostResponse{
-		ID:        p.ID,
-		AuthorID:  p.AuthorID,
-		Title:     p.Title,
-		Body:      p.Body,
-		CreatedAt: p.CreatedAt,
-		UpdatedAt: p.UpdatedAt,
+		ID:          p.ID,
+		AuthorID:    p.AuthorID,
+		AuthorEmail: p.AuthorEmail,
+		Title:       p.Title,
+		Body:        p.Body,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
 	}
 }

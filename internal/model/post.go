@@ -7,10 +7,11 @@ import (
 )
 
 type Post struct {
-	ID        uuid.UUID
-	AuthorID  uuid.UUID
-	Title     string
-	Body      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           uuid.UUID
+	AuthorID     uuid.UUID
+	AuthorEmail  string
+	Title        string
+	Body         string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

@@ -15,6 +15,9 @@ import (
 	"github.com/wreckitral/production-backend-go/internal/middleware"
 	"github.com/wreckitral/production-backend-go/internal/platform/config"
 	"github.com/wreckitral/production-backend-go/internal/post"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+
 )
 
 type Deps struct {
@@ -41,6 +44,7 @@ func New(d Deps) *App {
 
 	r.Get("/healthz", healthz)
 	r.Get("/readyz", readyz(d.DB))
+	r.Get("/metrics", promhttp.Handler().ServeHTTP)
 
 	authRepo := auth.NewRepo(d.DB)
 	authSvc := auth.NewService(authRepo, d.Config.JWT)
