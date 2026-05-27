@@ -31,6 +31,22 @@ services:
     networks:
       - blog_network
 
+  app:
+    build: .
+    container_name: blog_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${BLOG_HTTP_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_started
+    networks:
+      - blog_network
+
 volumes:
   postgres_data:
     name: postgres_persistent_data
