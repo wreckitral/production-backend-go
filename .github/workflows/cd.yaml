@@ -23,6 +23,7 @@ jobs:
       - name: Copy migrations to working dir
         run: |
           cp -r ${{ github.workspace }}/migrations ~/blog/
+          cp -r ${{ github.workspace }}/monitoring ~/blog/
           cp ${{ github.workspace }}/docker-compose.prod.yaml ~/blog/
 
       - name: Deploy
