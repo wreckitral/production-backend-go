@@ -1,0 +1,33 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Pi
+    runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | \
+            docker login ghcr.io -u wreckitral --password-stdin
+
+      - name: Copy migrations to working dir
+        run: |
+          cp -r ${{ github.workspace }}/migrations ~/blog/
+          cp ${{ github.workspace }}/docker-compose.prod.yml ~/blog/
+
+      - name: Deploy
+        run: |
+          cd ~/blog
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          docker image prune -f

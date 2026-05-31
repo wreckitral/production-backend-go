@@ -11,13 +11,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/wreckitral/production-backend-go/internal/auth"
 	"github.com/wreckitral/production-backend-go/internal/middleware"
 	"github.com/wreckitral/production-backend-go/internal/platform/config"
 	"github.com/wreckitral/production-backend-go/internal/post"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-
 )
 
 type Deps struct {
