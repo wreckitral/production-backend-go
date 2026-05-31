@@ -23,11 +23,11 @@ jobs:
       - name: Copy migrations to working dir
         run: |
           cp -r ${{ github.workspace }}/migrations ~/blog/
-          cp ${{ github.workspace }}/docker-compose.prod.yml ~/blog/
+          cp ${{ github.workspace }}/docker-compose.prod.yaml ~/blog/
 
       - name: Deploy
         run: |
           cd ~/blog
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          docker compose -f docker-compose.prod.yaml pull
+          docker compose -f docker-compose.prod.yaml up -d --remove-orphans
           docker image prune -f
